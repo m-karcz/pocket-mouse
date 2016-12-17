@@ -17,6 +17,7 @@
             {
                 components.Dispose();
             }
+            bluetooth.Close();
             base.Dispose(disposing);
         }
 
@@ -29,23 +30,36 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
+            this.bluetooth = new System.IO.Ports.SerialPort(this.components);
             this.SuspendLayout();
+            // 
+            // bluetooth
+            // 
+            this.bluetooth.PortName = "COM5";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ClientSize = new System.Drawing.Size(379, 321);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "Form1";
             this.Text = "Form1";
             this.ResumeLayout(false);
+            this.bluetooth.Open();
+            this.bluetooth.DataReceived += Bluetooth_DataReceived;
+        }
 
+        private void Bluetooth_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+        {
+            // Show all the incoming data in the port's buffer
+            System.Diagnostics.Debug.WriteLine("dupa");
+            System.Diagnostics.Debug.WriteLine(bluetooth.ReadExisting());
+            bluetooth.DiscardInBuffer();
         }
 
         #endregion
-
-        private System.IO.Ports.SerialPort serialPort1;
+        private System.IO.Ports.SerialPort bluetooth;
     }
 }
 
