@@ -17,8 +17,9 @@ namespace pc_app
             InitializeComponent();
             this.comboBox1.Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             this.bluetooth.DataReceived += Bluetooth_DataReceived;
+            this.comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
         }
-
+    
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             bluetooth.PortName = comboBox1.SelectedItem.ToString();
