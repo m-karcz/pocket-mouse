@@ -77,10 +77,21 @@
                 int dx = bluetooth.ReadByte();
                 int dy = bluetooth.ReadByte();
                 bluetooth.DiscardInBuffer();
-                System.Diagnostics.Debug.WriteLine(dx.ToString() + "," + dy.ToString());
-                var actualDx = System.Windows.Forms.Cursor.Position.X;
-                var actualDy = System.Windows.Forms.Cursor.Position.Y;
-                System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
+                if (dx == 'f')
+                {
+                    System.Diagnostics.Debug.WriteLine("klik");
+                    if (dy == 'f')
+                        Form1.MouseLeftClick();
+                    else
+                        Form1.MouseRightClick();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine(dx.ToString() + "," + dy.ToString());
+                    var actualDx = System.Windows.Forms.Cursor.Position.X;
+                    var actualDy = System.Windows.Forms.Cursor.Position.Y;
+                    System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
+                }
             }
             else if(bluetooth.BytesToRead == 0)
             {
@@ -90,6 +101,7 @@
             {
                 bluetooth.DiscardInBuffer();
             }
+            
             
         }
 
