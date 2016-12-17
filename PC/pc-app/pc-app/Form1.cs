@@ -16,5 +16,11 @@ namespace pc_app
         {
             InitializeComponent();
         }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            bluetooth.PortName = comboBox1.SelectedItem.ToString();
+            bluetooth.Open();
+        }
     }
 }

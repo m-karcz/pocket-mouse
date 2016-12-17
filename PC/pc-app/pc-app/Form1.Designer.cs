@@ -31,35 +31,62 @@
         {
             this.components = new System.ComponentModel.Container();
             this.bluetooth = new System.IO.Ports.SerialPort(this.components);
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // bluetooth
             // 
             this.bluetooth.PortName = "COM5";
+            this.bluetooth.DataReceived += Bluetooth_DataReceived;
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "COM5",
+            "COM6"});
+            this.comboBox1.Location = new System.Drawing.Point(246, 31);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(121, 24);
+            this.comboBox1.TabIndex = 0;
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(37, 32);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "Connect";
+            this.button1.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(379, 321);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.comboBox1);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.Text = "Form1";
             this.ResumeLayout(false);
-            this.bluetooth.Open();
-            this.bluetooth.DataReceived += Bluetooth_DataReceived;
+
         }
+
 
         private void Bluetooth_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             // Show all the incoming data in the port's buffer
-            System.Diagnostics.Debug.WriteLine("dupa");
             System.Diagnostics.Debug.WriteLine(bluetooth.ReadExisting());
             bluetooth.DiscardInBuffer();
         }
 
         #endregion
         private System.IO.Ports.SerialPort bluetooth;
+        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Button button1;
     }
 }
 
