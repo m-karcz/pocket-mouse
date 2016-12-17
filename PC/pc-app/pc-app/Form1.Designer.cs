@@ -1,4 +1,7 @@
-﻿namespace pc_app
+﻿using System;
+using System.Collections;
+
+namespace pc_app
 {
     partial class Form1
     {
@@ -72,32 +75,43 @@
 
         private void Bluetooth_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
-            if(bluetooth.BytesToRead==2)
+            if(bluetooth.BytesToRead==3)
             {
                 int dx = bluetooth.ReadByte();
                 int dy = bluetooth.ReadByte();
+                int click = bluetooth.ReadByte();
+                BitArray myBA = new BitArray(BitConverter.GetBytes(click));
                 bluetooth.DiscardInBuffer();
-                if (dx == 'f')
+                //if (dx == 'f')
+                //{
+                //    System.Diagnostics.Debug.WriteLine("klik");
+                //    if (dy == 'f')
+                //        Form1.MouseLeftClick();
+                //    else
+                //        Form1.MouseRightClick();
+                //}
+
+                System.Diagnostics.Debug.WriteLine(dx.ToString() + "," + dy.ToString());
+                var actualDx = System.Windows.Forms.Cursor.Position.X;
+                var actualDy = System.Windows.Forms.Cursor.Position.Y;
+                System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
+
+                if(myBA.Get(6)==true && myBA.Get(7)==false)
                 {
-                    System.Diagnostics.Debug.WriteLine("klik");
-                    if (dy == 'f')
-                        Form1.MouseLeftClick();
-                    else
-                        Form1.MouseRightClick();
+                    System.Diagnostics.Debug.WriteLine("klik left");
+                    Form1.MouseLeftClick();
                 }
-                else
+                else if (myBA.Get(6) == false && myBA.Get(7) == true)
                 {
-                    System.Diagnostics.Debug.WriteLine(dx.ToString() + "," + dy.ToString());
-                    var actualDx = System.Windows.Forms.Cursor.Position.X;
-                    var actualDy = System.Windows.Forms.Cursor.Position.Y;
-                    System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
+                    System.Diagnostics.Debug.WriteLine("klik right");
+                    Form1.MouseRightClick();
                 }
             }
             else if(bluetooth.BytesToRead == 0)
             {
                 System.Diagnostics.Debug.WriteLine("dupa -złe dane");
             }
-            else // if BytesToRead==1 or >2
+            else // if BytesToRead==1 or ==2 or >3
             {
                 bluetooth.DiscardInBuffer();
             }
