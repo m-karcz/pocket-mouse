@@ -15,12 +15,21 @@ namespace pc_app
         public Form1()
         {
             InitializeComponent();
+            this.comboBox1.Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
+            this.bluetooth.DataReceived += Bluetooth_DataReceived;
         }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             bluetooth.PortName = comboBox1.SelectedItem.ToString();
-            bluetooth.Open();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if(!bluetooth.IsOpen && System.IO.Ports.SerialPort.GetPortNames().Contains(bluetooth.PortName))
+            {
+                bluetooth.Open();
+            }
         }
     }
 }
