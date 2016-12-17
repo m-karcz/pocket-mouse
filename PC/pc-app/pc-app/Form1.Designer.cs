@@ -72,12 +72,12 @@
 
         private void Bluetooth_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
-            var data = bluetooth.ReadExisting();
-            
-            if(data.Length==2)
+            if(bluetooth.BytesToRead==2)
             {
-                int dx = data[0];
-                int dy = data[1];
+                int dx = bluetooth.ReadByte();
+                int dy = bluetooth.ReadByte();
+                bluetooth.DiscardInBuffer();
+                System.Diagnostics.Debug.WriteLine(dx.ToString() + "," + dy.ToString());
                 var actualDx = System.Windows.Forms.Cursor.Position.X;
                 var actualDy = System.Windows.Forms.Cursor.Position.Y;
                 System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
