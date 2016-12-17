@@ -82,9 +82,13 @@
                 var actualDy = System.Windows.Forms.Cursor.Position.Y;
                 System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
             }
-            else
+            else if(bluetooth.BytesToRead == 0)
             {
                 System.Diagnostics.Debug.WriteLine("dupa -złe dane");
+            }
+            else // if BytesToRead==1 or >2
+            {
+                bluetooth.DiscardInBuffer();
             }
             
         }
