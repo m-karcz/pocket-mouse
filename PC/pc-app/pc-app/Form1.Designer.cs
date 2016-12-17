@@ -43,9 +43,7 @@
             // comboBox1
             // 
             this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            "COM5",
-            "COM6"});
+            this.comboBox1.Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             this.comboBox1.Location = new System.Drawing.Point(246, 31);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(121, 24);
