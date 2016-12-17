@@ -6,7 +6,6 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
-
         /// <summary>
         /// Clean up any resources being used.
         /// </summary>
@@ -73,10 +72,21 @@
 
         private void Bluetooth_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
-            // Show all the incoming data in the port's buffer
-            System.Diagnostics.Debug.WriteLine(bluetooth.ReadExisting());
-            System.Diagnostics.Debug.WriteLine("dupa");
-            bluetooth.DiscardInBuffer();
+            var data = bluetooth.ReadExisting();
+            
+            if(data.Length==2)
+            {
+                int dx = data[0];
+                int dy = data[1];
+                var actualDx = System.Windows.Forms.Cursor.Position.X;
+                var actualDy = System.Windows.Forms.Cursor.Position.Y;
+                System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("dupa -złe dane");
+            }
+            
         }
 
         #endregion

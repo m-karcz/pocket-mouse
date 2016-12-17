@@ -12,12 +12,15 @@ namespace pc_app
 {
     public partial class Form1 : Form
     {
+        
+
         public Form1()
         {
             InitializeComponent();
             this.comboBox1.Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             this.bluetooth.DataReceived += Bluetooth_DataReceived;
             this.comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
+            this.Cursor = new System.Windows.Forms.Cursor(Cursor.Handle);
         }
     
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
