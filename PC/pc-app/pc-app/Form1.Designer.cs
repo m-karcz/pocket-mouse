@@ -114,7 +114,7 @@ namespace pc_app
                 bluetooth.DiscardInBuffer();
                 var actualDx = System.Windows.Forms.Cursor.Position.X;
                 var actualDy = System.Windows.Forms.Cursor.Position.Y;
-                Form1.SetCursorPos(SensitivityBar.Value * dx / 100 + actualDx, SensitivityBar.Value * dy / 100 + actualDy);
+                Form1.SetCursorPos(SensitivityBar.Value * (int)dx / 100 + actualDx, SensitivityBar.Value * (int)dy / 100 + actualDy);
                 if (myBA.Get(0)==true && myBA.Get(1)==false)
                 {
                     Form1.MouseLeftClick();
