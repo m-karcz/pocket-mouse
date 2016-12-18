@@ -22,6 +22,7 @@ namespace pc_app
             this.bluetooth.DataReceived += Bluetooth_DataReceived;
             this.comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
             this.Cursor = new System.Windows.Forms.Cursor(Cursor.Handle);
+            this.Sensitivity = SensitivityBar.Value;
         }
     
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)

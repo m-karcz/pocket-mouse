@@ -38,7 +38,7 @@ namespace pc_app
             this.SensitivityBar = new System.Windows.Forms.TrackBar();
             this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.SensitivityBar)).BeginInit();
-            Sensitivity = SensitivityBar.Value;
+            //Sensitivity = SensitivityBar.Value;
             this.SuspendLayout();
             // 
             // bluetooth
@@ -75,6 +75,7 @@ namespace pc_app
             this.SensitivityBar.TabIndex = 3;
             this.SensitivityBar.Value = 100;
             this.SensitivityBar.ValueChanged += new System.EventHandler(this.SensitivityBar_ValueChanged);
+            
             // 
             // label1
             // 
