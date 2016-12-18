@@ -40,18 +40,19 @@ namespace pc_app
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
 
-        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const int MOUSEEVENTF_LEFTUP = 0x04;
-        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
-        private const int MOUSEEVENTF_RIGHTUP = 0x10;
+        private const uint MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const uint MOUSEEVENTF_LEFTUP = 0x04;
+        private const uint MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const uint MOUSEEVENTF_RIGHTUP = 0x10;
 
-        public static void MouseLeftClick()
+        public static void MouseLeftClick(bool down)
         {
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            //mouse_event(down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            mouse_event(down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
         }
-        public static void MouseRightClick()
+        public static void MouseRightClick(bool down)
         {
-            mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+           // mouse_event(down ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
         }
         public static void MouseMoveXY(uint x, uint y) {
             mouse_event(0, x, y, 0, 0);
@@ -63,5 +64,23 @@ namespace pc_app
         {
             Sensitivity = SensitivityBar.Value;
         }
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            if (FormWindowState.Minimized == this.WindowState)
+            {
+                notifyIcon1.Visible = true;
+               // notifyIcon1.ShowBalloonTip(500);
+                this.Hide();
+            }
+            else if (FormWindowState.Normal == this.WindowState)
+            {
+                notifyIcon1.Visible = false;
+            }
+        }
+         private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        { 
+     this.Show();
+     this.WindowState = FormWindowState.Normal;
+}          
     }
 }
