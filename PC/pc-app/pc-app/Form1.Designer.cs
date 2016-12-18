@@ -101,6 +101,7 @@ namespace pc_app
             this.Controls.Add(this.SensitivityBar);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.button1);
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "PicoMouse";
             this.Resize += new System.EventHandler(this.Form1_Resize);
