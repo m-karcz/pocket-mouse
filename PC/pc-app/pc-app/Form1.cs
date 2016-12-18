@@ -42,17 +42,21 @@ namespace pc_app
 
         private const uint MOUSEEVENTF_LEFTDOWN = 0x02;
         private const uint MOUSEEVENTF_LEFTUP = 0x04;
-        private const uint MOUSEEVENTF_RIGHTDOWN = 0x08;
-        private const uint MOUSEEVENTF_RIGHTUP = 0x10;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const int MOUSEEVENTF_RIGHTUP = 0x10;
+        private const int MOUSEEVENTF_ABSOLUTE = 0x08000;
 
         public static void MouseLeftClick(bool down)
         {
             //mouse_event(down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
             mouse_event(down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
         }
-        public static void MouseRightClick(bool down)
+        public static void MouseRightClick()
         {
-           // mouse_event(down ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+            //   mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+            //   mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+            mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+            
         }
         public static void MouseMoveXY(uint x, uint y) {
             mouse_event(0, x, y, 0, 0);
@@ -81,6 +85,7 @@ namespace pc_app
         { 
      this.Show();
      this.WindowState = FormWindowState.Normal;
-}          
+}        
+    private bool rightClicked=false;
     }
 }
