@@ -48,10 +48,10 @@ namespace pc_app
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(37, 32);
-            this.button1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.button1.Location = new System.Drawing.Point(28, 26);
+            this.button1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(63, 21);
             this.button1.TabIndex = 1;
             this.button1.Text = "Connect";
             this.button1.UseVisualStyleBackColor = true;
@@ -60,20 +60,19 @@ namespace pc_app
             // comboBox1
             // 
             this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(245, 32);
-            this.comboBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.comboBox1.Location = new System.Drawing.Point(132, 26);
+            this.comboBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 24);
+            this.comboBox1.Size = new System.Drawing.Size(92, 21);
             this.comboBox1.TabIndex = 2;
             // 
             // SensitivityBar
             // 
-            this.SensitivityBar.Location = new System.Drawing.Point(79, 197);
-            this.SensitivityBar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.SensitivityBar.Location = new System.Drawing.Point(28, 102);
             this.SensitivityBar.Maximum = 150;
             this.SensitivityBar.Minimum = 50;
             this.SensitivityBar.Name = "SensitivityBar";
-            this.SensitivityBar.Size = new System.Drawing.Size(229, 56);
+            this.SensitivityBar.Size = new System.Drawing.Size(196, 45);
             this.SensitivityBar.TabIndex = 3;
             this.SensitivityBar.Value = 100;
             this.SensitivityBar.ValueChanged += new System.EventHandler(this.SensitivityBar_ValueChanged);
@@ -81,10 +80,9 @@ namespace pc_app
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(145, 150);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(96, 86);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(71, 17);
+            this.label1.Size = new System.Drawing.Size(54, 13);
             this.label1.TabIndex = 4;
             this.label1.Text = "Sensitivity";
             // 
@@ -96,16 +94,15 @@ namespace pc_app
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(379, 321);
+            this.ClientSize = new System.Drawing.Size(256, 159);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.SensitivityBar);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.button1);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "PicoMouse";
             this.Resize += new System.EventHandler(this.Form1_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.SensitivityBar)).EndInit();
             this.ResumeLayout(false);
