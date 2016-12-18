@@ -17,14 +17,6 @@
         android:layout_height="wrap_content"
         android:text="Pick the device:" />
 
-    <Button
-        android:id="@+id/open"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/entry"
-        android:layout_marginLeft="10dip"
-        android:text="Connect" />
     <!--
        <Button
            android:id="@+id/send"
@@ -67,16 +59,8 @@
        -->
 
     <Button
-        android:id="@+id/close"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Disconnect"
-        android:layout_below="@+id/entry"
-        android:layout_alignParentStart="true" />
-
-    <Button
         android:text="Mouse\nRight"
-        android:layout_width="150dp"
+        android:layout_width="160dp"
         android:layout_height="240dp"
         android:id="@+id/mouseR"
         android:layout_centerVertical="true"
@@ -84,19 +68,46 @@
 
     <Button
         android:text="Mouse\nLeft"
-        android:layout_width="150dp"
+        android:layout_width="160dp"
         android:layout_height="240dp"
         android:id="@+id/mouseL"
         android:layout_alignTop="@+id/mouseR"
         android:layout_alignParentStart="true" />
 
-    <EditText
-        android:id="@+id/entry"
-        android:layout_width="fill_parent"
+    <Spinner
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:drawable/editbox_background"
+        android:id="@+id/spinner"
         android:layout_below="@+id/label"
-        android:text="Mariusz-LAPTOK"
         android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/open"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dip"
+        android:text="Connect"
+        android:layout_below="@+id/spinner"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/close"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="Disconnect"
+        android:layout_alignBaseline="@+id/open"
+        android:layout_alignBottom="@+id/open"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="Lock Move"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/lockMove"
+        android:layout_alignBaseline="@+id/close"
+        android:layout_alignBottom="@+id/close"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>
 

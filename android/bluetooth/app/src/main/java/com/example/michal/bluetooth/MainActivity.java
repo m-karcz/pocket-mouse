@@ -1,36 +1,34 @@
 package com.example.michal.bluetooth;
 
-
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.NumberPicker;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.EditText;
 import android.widget.Button;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
-import android.content.Context;
-
+import java.util.ArrayList;
+import java.util.List;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-
 import android.hardware.SensorManager;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 
 public class MainActivity extends Activity implements SensorEventListener
 {
     TextView myLabel;
-    EditText myTextbox;
     BluetoothAdapter mBluetoothAdapter;
     BluetoothSocket mmSocket;
     BluetoothDevice mmDevice;
@@ -39,17 +37,14 @@ public class MainActivity extends Activity implements SensorEventListener
     Thread workerThread;
     byte[] readBuffer;
     int readBufferPosition;
-    int counter=0;
-    boolean isOpen=false;
-    boolean NeedToSend=false;
+    boolean isOpen=false,isConnected=false;
+    boolean NeedToSend=false,allowToSend=true;
     volatile boolean stopWorker;
-    private float deltaX,deltaY,deltaZ;
+    private float deltaX,deltaY;
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private byte[] packet = {0,0,0};
-    boolean calibration;
-
-    private TextView xText, yText, zText;
+    private Spinner devList;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -61,25 +56,22 @@ public class MainActivity extends Activity implements SensorEventListener
         Button closeButton = (Button)findViewById(R.id.close);
         Button mLbutton= (Button)findViewById(R.id.mouseL);
         Button mRbutton= (Button)findViewById(R.id.mouseR);
+        Button lockMove= (Button)findViewById(R.id.lockMove);
+        //Spinner devList= (Spinner)findViewById(R.id.spinner);
         myLabel = (TextView)findViewById(R.id.label);
-        myTextbox = (EditText)findViewById(R.id.entry);
-        NumberPicker picker = new NumberPicker(this);
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
             // success! we have an accelerometer
-
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
 
         } else {
             // fail! we dont have an accelerometer!
+            myLabel.setText("Gyroscope error");
         }
         //Picker initialize
-        picker.setMinValue(0);
-        picker.setMaxValue(2);
-        picker.setDisplayedValues( new String[] { "Mariusz-LAPTOK", "France", "United Kingdom" } );
-
+        addItemsOnSpinner("Please scan for devices");
         //Open Button
         openButton.setOnClickListener(new View.OnClickListener()
         {
@@ -99,40 +91,56 @@ public class MainActivity extends Activity implements SensorEventListener
         {
             public void onClick(View v)
             {
+                if(isConnected|| isOpen){
                 try
                 {
                     closeBT();
                 }
                 catch (IOException ex) { }
-            }
+            }}
         });
-        //Left button
+        //Mouse Left button
         mLbutton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch(event.getAction()) {
+                if(isConnected || isOpen){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         packet[2]=(byte) 1;
                         return true;
                     case MotionEvent.ACTION_UP:
                         packet[2]=(byte) 0;
                         return true;
-                }
+                }}
                 return false;
             }
         });
-        //Right button
+        //Mouse Right button
         mRbutton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch(event.getAction()) {
+                if(isConnected || isOpen){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         packet[2]=(byte) 2;
                         return true;
                     case MotionEvent.ACTION_UP:
                         packet[2]=(byte) 0;
                         return true;
-                }
+                }}
+                return false;
+            }
+        });
+        //Mouse movement locker
+        lockMove.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(isConnected || isOpen){switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        allowToSend=false;
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        allowToSend=true;
+                        return true;
+                }}
                 return false;
             }
         });
@@ -159,7 +167,7 @@ public class MainActivity extends Activity implements SensorEventListener
             NeedToSend=false;
             deltaX=0;
         }
-        if ((isOpen==true && NeedToSend==true) || packet[2]!=0) {
+        if (allowToSend && ((isOpen && NeedToSend) || packet[2]!=0)) {
             try
             {
                 packet[0]=(byte) deltaX;
@@ -174,6 +182,15 @@ public class MainActivity extends Activity implements SensorEventListener
         }
     }
 
+    public void addItemsOnSpinner(String newDev) {
+        devList = (Spinner) findViewById(R.id.spinner);
+        List<String> list = new ArrayList<String>();
+        list.add(newDev);
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, list);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        devList.setAdapter(dataAdapter);
+    }
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
@@ -196,7 +213,8 @@ public class MainActivity extends Activity implements SensorEventListener
         {
             for(BluetoothDevice device : pairedDevices)
             {
-                if(device.getName().equals("MARIUSZ-LAPTOK"))
+                //if(device.getName().equals("MARIUSZ-LAPTOK"))
+                if(device.getName().equals("DESKTOP-D5L3DLV"))
                 {
                     mmDevice = device;
                     break;
@@ -204,6 +222,9 @@ public class MainActivity extends Activity implements SensorEventListener
             }
         }
         myLabel.setText("Bluetooth Device Found");
+        //addItemsOnSpinner("Mariusz-LAPTOK");
+        addItemsOnSpinner("DESKTOP-D5L3DLV");
+        isConnected=true;
     }
 
     void openBT() throws IOException
@@ -273,16 +294,7 @@ public class MainActivity extends Activity implements SensorEventListener
                 }
             }
         });
-
         workerThread.start();
-    }
-
-    void sendData() throws IOException
-    {
-        String msg ="aa";// myTextbox.getText().toString();
-        msg += "\n";
-        mmOutputStream.write(new byte[]{(byte) deltaX, (byte) deltaZ,0});
-        myLabel.setText("Data Sent");
     }
 
     void closeBT() throws IOException
@@ -290,20 +302,17 @@ public class MainActivity extends Activity implements SensorEventListener
         stopWorker = true;
         mmOutputStream.close();
         mmInputStream.close();
+        isOpen=false;
         mmSocket.close();
         myLabel.setText("Bluetooth Closed");
-        isOpen=false;
-    }
-
-    public void displayCurrentValues() {
-        xText.setText(Float.toString(deltaX));
-        yText.setText(Float.toString(deltaY));
-        zText.setText(Float.toString(deltaZ));
-    }
-
-    public void displayCleanValues() {
-        xText.setText("0.0");
-        yText.setText("0.0");
-        zText.setText("0.0");
+        isConnected=false;
     }
 }
+
+  //  void sendData() throws IOException
+  //  {
+  //      String msg ="aa";// myTextbox.getText().toString();
+  //      msg += "\n";
+  //      mmOutputStream.write(new byte[]{(byte) deltaX, (byte) deltaY,0});
+  //      myLabel.setText("Data Sent");
+  //  }
