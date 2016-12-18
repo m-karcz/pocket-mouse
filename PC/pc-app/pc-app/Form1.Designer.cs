@@ -132,11 +132,16 @@ namespace pc_app
                 Form1.SetCursorPos(Sensitivity * (int)dx / 100 + actualDx, Sensitivity * (int)dy / 100 + actualDy);
                 if (myBA.Get(0)==true && myBA.Get(1)==false)
                 {
-                    Form1.MouseLeftClick(true);
+                    if (!leftClicked)
+                    {
+                        Form1.MouseLeftClick(true);
+                        leftClicked = true;
+                    }
                 }
                 else
                 {
                     Form1.MouseLeftClick(false);
+                    leftClicked = false;
                 } 
                 if (myBA.Get(0) == false && myBA.Get(1) == true)
                 {

@@ -49,6 +49,7 @@ namespace pc_app
         public static void MouseLeftClick(bool down)
         {
             //mouse_event(down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            
             mouse_event(down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
         }
         public static void MouseRightClick()
@@ -87,5 +88,6 @@ namespace pc_app
      this.WindowState = FormWindowState.Normal;
 }        
     private bool rightClicked=false;
+        private bool leftClicked = false;
     }
 }
