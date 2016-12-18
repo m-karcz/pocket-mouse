@@ -57,7 +57,5 @@ namespace pc_app
         }
             [DllImport("User32.Dll")]
     public static extern long SetCursorPos(int x, int y);
-         
-
     }
 }
