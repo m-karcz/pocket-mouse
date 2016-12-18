@@ -52,5 +52,12 @@ namespace pc_app
         {
             mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
         }
+        public static void MouseMoveXY(uint x, uint y) {
+            mouse_event(0, x, y, 0, 0);
+        }
+            [DllImport("User32.Dll")]
+    public static extern long SetCursorPos(int x, int y);
+         
+
     }
 }

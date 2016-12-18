@@ -35,10 +35,11 @@ namespace pc_app
             this.bluetooth = new System.IO.Ports.SerialPort(this.components);
             this.button1 = new System.Windows.Forms.Button();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.SuspendLayout();
+           // this.SuspendLayout();
             // 
             // bluetooth
             // 
+            this.bluetooth.BaudRate = 115200;
             // 
             // button1
             // 
@@ -68,7 +69,7 @@ namespace pc_app
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.Text = "Form1";
-            this.ResumeLayout(false);
+         //   this.ResumeLayout(false);
 
         }
 
@@ -80,28 +81,19 @@ namespace pc_app
                 int dx = bluetooth.ReadByte();
                 int dy = bluetooth.ReadByte();
                 int click = bluetooth.ReadByte();
-                //dx = dx > 127 ? -dx : dx;
                 dx = (sbyte)dx;
                 dy = (sbyte)dy;
                 BitArray myBA = new BitArray(BitConverter.GetBytes((sbyte)click));
                 bluetooth.DiscardInBuffer();
-                /*System.Diagnostics.Debug.WriteLine(dx.ToString() + "," + dy.ToString());
-                foreach(bool x in myBA)
-                {
-                    System.Diagnostics.Debug.Write( x ? "1" : "0");
-                }
-                System.Diagnostics.Debug.Write('\n');*/
                 var actualDx = System.Windows.Forms.Cursor.Position.X;
                 var actualDy = System.Windows.Forms.Cursor.Position.Y;
-                System.Windows.Forms.Cursor.Position = new System.Drawing.Point(actualDx + dx, actualDy + dy);
-                if(myBA.Get(0)==true && myBA.Get(1)==false)
+                    Form1.SetCursorPos(dx + actualDx, dy + actualDy);
+                if (myBA.Get(0)==true && myBA.Get(1)==false)
                 {
-                   // System.Diagnostics.Debug.WriteLine("klik left");
                     Form1.MouseLeftClick();
                 }
                 else if (myBA.Get(0) == false && myBA.Get(1) == true)
                 {
-                   // System.Diagnostics.Debug.WriteLine("klik right");
                     Form1.MouseRightClick();
                 }
             }
