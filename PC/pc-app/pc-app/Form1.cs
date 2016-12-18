@@ -57,5 +57,10 @@ namespace pc_app
         }
             [DllImport("User32.Dll")]
     public static extern long SetCursorPos(int x, int y);
+
+        private void SensitivityBar_ValueChanged(object sender, EventArgs e)
+        {
+            Sensitivity = SensitivityBar.Value;
+        }
     }
 }
