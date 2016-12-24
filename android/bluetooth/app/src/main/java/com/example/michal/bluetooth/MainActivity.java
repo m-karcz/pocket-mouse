@@ -42,9 +42,11 @@ public class MainActivity extends Activity implements SensorEventListener
     volatile boolean stopWorker;
     private float deltaX,deltaY;
     private SensorManager sensorManager;
-    private Sensor accelerometer;
+    private Sensor gyroscope;
     private byte[] packet = {0,0,0};
     private Spinner devList;
+    Set<BluetoothDevice> pairedDevices;
+    private final int REQUEST_ENABLE_BT = 1;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -57,21 +59,57 @@ public class MainActivity extends Activity implements SensorEventListener
         Button mLbutton= (Button)findViewById(R.id.mouseL);
         Button mRbutton= (Button)findViewById(R.id.mouseR);
         Button lockMove= (Button)findViewById(R.id.lockMove);
-        //Spinner devList= (Spinner)findViewById(R.id.spinner);
+        devList= (Spinner)findViewById(R.id.devList);
         myLabel = (TextView)findViewById(R.id.label);
-
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
-            // success! we have an accelerometer
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null)
+        {
+            // success! we have a gyroscope
+            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
 
-        } else {
-            // fail! we dont have an accelerometer!
+        } 
+        else 
+        {
+            // fail! we don't have a gyro!
             myLabel.setText("Gyroscope error");
         }
         //Picker initialize
-        addItemsOnSpinner("Please scan for devices");
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null)
+        {
+            //debugLabel.setText  ("Bluetooth is not supported on this device.");
+            //TODO - add a popup to close the app
+        }
+        else
+        {
+            //debugLabel.setText("BT ok");
+        }
+        if( !mBluetoothAdapter.isEnabled() )
+        {
+            Intent enableBtIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult( enableBtIntent, REQUEST_ENABLE_BT );
+        }
+        pairedDevices = mBluetoothAdapter.getBondedDevices();
+        if( pairedDevices.size() > 0 )
+        {
+            List<String> list = new ArrayList<>();
+            for (BluetoothDevice device : pairedDevices)
+            {
+                list.add( device.getName() );
+            }
+            ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, list);
+            dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            devList.setAdapter(dataAdapter);
+        }
+        else
+        {
+            List<String> list = new ArrayList<>();
+            list.add("You don't have any paired devices");
+            ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,list);
+            devList.setAdapter(dataAdapter);
+
+        }
         //Open Button
         openButton.setOnClickListener(new View.OnClickListener()
         {
@@ -79,7 +117,7 @@ public class MainActivity extends Activity implements SensorEventListener
             {
                 try
                 {
-                    findBT();
+                    //findBT();
                     openBT();
                 }
                 catch (IOException ex) { }
@@ -147,8 +185,9 @@ public class MainActivity extends Activity implements SensorEventListener
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        // get the change of the x,y,z values of the accelerometer
+    public void onSensorChanged(SensorEvent event)
+    {
+        // get the change of the x,y,z values of the gyroscope
         if (Math.abs(event.values[0])>0.05) {
             deltaY = -35*event.values[0];
             NeedToSend=true;
@@ -167,7 +206,8 @@ public class MainActivity extends Activity implements SensorEventListener
             NeedToSend=false;
             deltaX=0;
         }
-        if (allowToSend && ((isOpen && NeedToSend) || packet[2]!=0)) {
+        if (allowToSend && ((isOpen && NeedToSend) || packet[2]!=0))
+        {
             try
             {
                 packet[0]=(byte) deltaX;
@@ -175,26 +215,28 @@ public class MainActivity extends Activity implements SensorEventListener
                 mmOutputStream.write(packet);
                 myLabel.setText("Data Sent");
             }
-            catch (IOException ex) {
+            catch (IOException ex)
+            {
                 myLabel.setText("Sending error!");
                 isOpen=false;
             }
         }
     }
 
-    public void addItemsOnSpinner(String newDev) {
-        devList = (Spinner) findViewById(R.id.spinner);
+    /*public void addItemsOnSpinner(String newDev)
+    {
+        devList = (Spinner) findViewById(R.id.devList);
         List<String> list = new ArrayList<String>();
         list.add(newDev);
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, list);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         devList.setAdapter(dataAdapter);
-    }
+    }*/
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    void findBT()
+   /* void findBT()
     {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if(mBluetoothAdapter == null)
@@ -225,11 +267,19 @@ public class MainActivity extends Activity implements SensorEventListener
         //addItemsOnSpinner("Mariusz-LAPTOK");
         addItemsOnSpinner("DESKTOP-D5L3DLV");
         isConnected=true;
-    }
+    }*/
 
     void openBT() throws IOException
     {
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
+        String devName = devList.getSelectedItem().toString();
+        for( BluetoothDevice dev : pairedDevices )
+        {
+            if( devName.equals(dev.getName()) )
+            {
+                mmDevice =  dev;
+            }
+        }
         mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
         mmSocket.connect();
         mmOutputStream = mmSocket.getOutputStream();
@@ -239,6 +289,8 @@ public class MainActivity extends Activity implements SensorEventListener
 
         myLabel.setText("Bluetooth Opened");
         isOpen=true;
+        isConnected=true;
+
     }
 
     void beginListenForData()
