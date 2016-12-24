@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">bluetooth</string>
+    <string name="app_name">Pocket Mouse</string>
+    <string name="gyro_error">Your device has no gyroscope</string>
+    <string name="data_sent">Data sent</string>
+    <string name="send_err">Sending error</string>
+    <string name="BT_opened">Bluetooth opened</string>
+    <string name="BT_closed">Bluetooth closed</string>
 </resources>

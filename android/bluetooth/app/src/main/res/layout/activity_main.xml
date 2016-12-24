@@ -89,7 +89,8 @@
         android:text="Connect"
         android:layout_below="@+id/devList"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="12dp" />
+        android:layout_marginTop="12dp"
+        android:onClick="openBtnClicked" />
 
     <Button
         android:id="@+id/close"
@@ -98,7 +99,8 @@
         android:text="Disconnect"
         android:layout_alignBaseline="@+id/open"
         android:layout_alignBottom="@+id/open"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:onClick="closeBtnClicked" />
 
     <Button
         android:text="Lock Move"

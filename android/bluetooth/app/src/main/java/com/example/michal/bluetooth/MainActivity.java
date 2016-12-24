@@ -1,10 +1,11 @@
 package com.example.michal.bluetooth;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -34,15 +35,12 @@ public class MainActivity extends Activity implements SensorEventListener
     BluetoothDevice mmDevice;
     OutputStream mmOutputStream;
     InputStream mmInputStream;
-    Thread workerThread;
-    byte[] readBuffer;
-    int readBufferPosition;
     boolean isOpen=false,isConnected=false;
     boolean NeedToSend=false,allowToSend=true;
     volatile boolean stopWorker;
-    private float deltaX,deltaY;
-    private SensorManager sensorManager;
-    private Sensor gyroscope;
+
+
+
     private byte[] packet = {0,0,0};
     private Spinner devList;
     Set<BluetoothDevice> pairedDevices;
@@ -51,13 +49,14 @@ public class MainActivity extends Activity implements SensorEventListener
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        SensorManager sensorManager;
+        Sensor gyroscope;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button openButton = (Button)findViewById(R.id.open);
-        Button closeButton = (Button)findViewById(R.id.close);
-        Button mLbutton= (Button)findViewById(R.id.mouseL);
-        Button mRbutton= (Button)findViewById(R.id.mouseR);
+        Button mLeftButton= (Button)findViewById(R.id.mouseL);
+        Button mRightButton= (Button)findViewById(R.id.mouseR);
         Button lockMove= (Button)findViewById(R.id.lockMove);
         devList= (Spinner)findViewById(R.id.devList);
         myLabel = (TextView)findViewById(R.id.label);
@@ -72,19 +71,15 @@ public class MainActivity extends Activity implements SensorEventListener
         else 
         {
             // fail! we don't have a gyro!
-            myLabel.setText("Gyroscope error");
+            myLabel.setText(R.string.gyro_error);
         }
         //Picker initialize
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null)
         {
-            //debugLabel.setText  ("Bluetooth is not supported on this device.");
-            //TODO - add a popup to close the app
+            exit_app();
         }
-        else
-        {
-            //debugLabel.setText("BT ok");
-        }
+
         if( !mBluetoothAdapter.isEnabled() )
         {
             Intent enableBtIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -98,7 +93,7 @@ public class MainActivity extends Activity implements SensorEventListener
             {
                 list.add( device.getName() );
             }
-            ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, list);
+            ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, list);
             dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             devList.setAdapter(dataAdapter);
         }
@@ -106,39 +101,13 @@ public class MainActivity extends Activity implements SensorEventListener
         {
             List<String> list = new ArrayList<>();
             list.add("You don't have any paired devices");
-            ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,list);
+            ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,list);
             devList.setAdapter(dataAdapter);
 
         }
-        //Open Button
-        openButton.setOnClickListener(new View.OnClickListener()
-        {
-            public void onClick(View v)
-            {
-                try
-                {
-                    //findBT();
-                    openBT();
-                }
-                catch (IOException ex) { }
-            }
-        });
 
-        //Close button
-        closeButton.setOnClickListener(new View.OnClickListener()
-        {
-            public void onClick(View v)
-            {
-                if(isConnected|| isOpen){
-                try
-                {
-                    closeBT();
-                }
-                catch (IOException ex) { }
-            }}
-        });
-        //Mouse Left button
-        mLbutton.setOnTouchListener(new View.OnTouchListener() {
+
+        mLeftButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if(isConnected || isOpen){switch(event.getAction()) {
@@ -153,7 +122,7 @@ public class MainActivity extends Activity implements SensorEventListener
             }
         });
         //Mouse Right button
-        mRbutton.setOnTouchListener(new View.OnTouchListener() {
+        mRightButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if(isConnected || isOpen){switch(event.getAction()) {
@@ -185,8 +154,21 @@ public class MainActivity extends Activity implements SensorEventListener
     }
 
     @Override
+    protected void onActivityResult( int requestCode, int resultCode, Intent data )
+    {//function to determine if BT was enabled
+        if(requestCode == REQUEST_ENABLE_BT)
+        {
+            if(RESULT_CANCELED == resultCode)
+            {
+                exit_app();
+            }
+        }
+    }
+
+    @Override
     public void onSensorChanged(SensorEvent event)
     {
+        float deltaX,deltaY;
         // get the change of the x,y,z values of the gyroscope
         if (Math.abs(event.values[0])>0.05) {
             deltaY = -35*event.values[0];
@@ -213,61 +195,59 @@ public class MainActivity extends Activity implements SensorEventListener
                 packet[0]=(byte) deltaX;
                 packet[1]=(byte) deltaY;
                 mmOutputStream.write(packet);
-                myLabel.setText("Data Sent");
+                myLabel.setText(R.string.data_sent);
             }
             catch (IOException ex)
             {
-                myLabel.setText("Sending error!");
+                myLabel.setText(R.string.send_err);
                 isOpen=false;
             }
         }
     }
 
-    /*public void addItemsOnSpinner(String newDev)
-    {
-        devList = (Spinner) findViewById(R.id.devList);
-        List<String> list = new ArrayList<String>();
-        list.add(newDev);
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, list);
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        devList.setAdapter(dataAdapter);
-    }*/
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-   /* void findBT()
+    public void exit_app()
     {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(mBluetoothAdapter == null)
-        {
-            myLabel.setText("No bluetooth adapter available");
-        }
-
-        if(!mBluetoothAdapter.isEnabled())
-        {
-            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetooth, 0);
-        }
-
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        if(pairedDevices.size() > 0)
-        {
-            for(BluetoothDevice device : pairedDevices)
-            {
-                //if(device.getName().equals("MARIUSZ-LAPTOK"))
-                if(device.getName().equals("DESKTOP-D5L3DLV"))
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Close")
+                .setMessage("Close the app")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener()
                 {
-                    mmDevice = device;
-                    break;
-                }
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+
+                })
+                .show();
+    }
+
+    public void openBtnClicked(View view)
+    {
+        try
+        {
+            openBT();
+        }
+        catch (IOException ex)
+        {
+            exit_app();
+        }
+    }
+
+    public void closeBtnClicked(View view)
+    {
+        if(isConnected || isOpen)
+        {
+            try {
+                closeBT();
+            } catch (IOException ex) {
+                exit_app();
             }
         }
-        myLabel.setText("Bluetooth Device Found");
-        //addItemsOnSpinner("Mariusz-LAPTOK");
-        addItemsOnSpinner("DESKTOP-D5L3DLV");
-        isConnected=true;
-    }*/
+    }
 
     void openBT() throws IOException
     {
@@ -285,68 +265,12 @@ public class MainActivity extends Activity implements SensorEventListener
         mmOutputStream = mmSocket.getOutputStream();
         mmInputStream = mmSocket.getInputStream();
 
-        beginListenForData();
 
-        myLabel.setText("Bluetooth Opened");
+
+        myLabel.setText(R.string.BT_opened);
         isOpen=true;
         isConnected=true;
 
-    }
-
-    void beginListenForData()
-    {
-        final Handler handler = new Handler();
-        final byte delimiter = 10; //This is the ASCII code for a newline character
-
-        stopWorker = false;
-        readBufferPosition = 0;
-        readBuffer = new byte[1024];
-        workerThread = new Thread(new Runnable()
-        {
-            public void run()
-            {
-                while(!Thread.currentThread().isInterrupted() && !stopWorker)
-                {
-                    try
-                    {
-                        int bytesAvailable = mmInputStream.available();
-                        if(bytesAvailable > 0)
-                        {
-                            byte[] packetBytes = new byte[bytesAvailable];
-                            mmInputStream.read(packetBytes);
-                            for(int i=0;i<bytesAvailable;i++)
-                            {
-                                byte b = packetBytes[i];
-                                if(b == delimiter)
-                                {
-                                    byte[] encodedBytes = new byte[readBufferPosition];
-                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                    final String data = new String(encodedBytes, "US-ASCII");
-                                    readBufferPosition = 0;
-
-                                    handler.post(new Runnable()
-                                    {
-                                        public void run()
-                                        {
-                                            myLabel.setText(data);
-                                        }
-                                    });
-                                }
-                                else
-                                {
-                                    readBuffer[readBufferPosition++] = b;
-                                }
-                            }
-                        }
-                    }
-                    catch (IOException ex)
-                    {
-                        stopWorker = true;
-                    }
-                }
-            }
-        });
-        workerThread.start();
     }
 
     void closeBT() throws IOException
@@ -356,15 +280,8 @@ public class MainActivity extends Activity implements SensorEventListener
         mmInputStream.close();
         isOpen=false;
         mmSocket.close();
-        myLabel.setText("Bluetooth Closed");
+        myLabel.setText(R.string.BT_closed);
         isConnected=false;
     }
 }
 
-  //  void sendData() throws IOException
-  //  {
-  //      String msg ="aa";// myTextbox.getText().toString();
-  //      msg += "\n";
-  //      mmOutputStream.write(new byte[]{(byte) deltaX, (byte) deltaY,0});
-  //      myLabel.setText("Data Sent");
-  //  }
