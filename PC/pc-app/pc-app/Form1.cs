@@ -21,8 +21,9 @@ namespace pc_app
         {
             InitializeComponent();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            Icon = notConnectedIcon = (System.Drawing.Icon)resources.GetObject("NotConnectedIcon");
-            this.connectedIcon = (System.Drawing.Icon)resources.GetObject("ConnectedIcon");
+            notConnectedIcon = pc_app.Properties.Resources.NotConnectedIcon;
+            Icon = notConnectedIcon;
+            connectedIcon = pc_app.Properties.Resources.ConnectedIcon;
             checkingConnection = new Thread(new ThreadStart(CheckingConnectionFun));
             notifyIcon.ContextMenu = GetMenuForIcon();    
             notifyIcon.Visible = true;
@@ -33,7 +34,6 @@ namespace pc_app
             Action act = () => notifyIcon.Icon = Icon = bt.GetConnectedStatus() ? connectedIcon : notConnectedIcon;
             while (true)
             {
-                
                 Invoke(act);
                 Thread.Sleep(1000);
             }
@@ -51,5 +51,12 @@ namespace pc_app
         {
             this.Close();
         }
+
+        
+
+       /* protected override void SetVisibleCore(bool value)
+        {
+            base.SetVisibleCore(false);
+        }*/
     }
 }
