@@ -29,18 +29,12 @@ import android.bluetooth.BluetoothSocket;
 
 public class MainActivity extends Activity implements SensorEventListener
 {
-    TextView myLabel;
-    BluetoothAdapter mBluetoothAdapter;
-    BluetoothSocket mmSocket;
-    BluetoothDevice mmDevice;
-    OutputStream mmOutputStream;
-    InputStream mmInputStream;
-    boolean open=false,connected=false;
+    private TextView myLabel;
     boolean NeedToSend=false,allowToSend=true;
     private byte[] packet = {0,0,0};
     private Spinner devList;
-    Set<BluetoothDevice> pairedDevices;
     private final int REQUEST_ENABLE_BT = 1;
+    private BT bluetooth;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -62,32 +56,21 @@ public class MainActivity extends Activity implements SensorEventListener
             // success! we have a gyroscope
             gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
-
         } 
         else 
         {
             // fail! we don't have a gyro!
-            myLabel.setText(R.string.gyro_error);
-        }
-        //Picker initialize
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null)
-        {
-            exit_app("You have no bluetooth device, press OK to close the application.");
+            exit_app( R.string.gyro_error );
         }
 
-        if( !mBluetoothAdapter.isEnabled() )
-        {
-            Intent enableBtIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult( enableBtIntent, REQUEST_ENABLE_BT );
-        }
-        updateBTdevices();
+        bluetooth = new BT();
+        bluetooth.updateDevices();
 
 
         mLeftButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(connected || open){switch(event.getAction()) {
+                if( bluetooth.isConnected() ){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         packet[2]=(byte) 1;
                         return true;
@@ -102,7 +85,7 @@ public class MainActivity extends Activity implements SensorEventListener
         mRightButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(connected || open){switch(event.getAction()) {
+                if( bluetooth.isConnected() ){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         packet[2]=(byte) 2;
                         return true;
@@ -117,7 +100,7 @@ public class MainActivity extends Activity implements SensorEventListener
         lockMove.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(connected || open){switch(event.getAction()) {
+                if( bluetooth.isConnected() ){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         allowToSend=false;
                         return true;
@@ -139,11 +122,11 @@ public class MainActivity extends Activity implements SensorEventListener
         {
             if(RESULT_CANCELED == resultCode)
             {
-                exit_app("You have to turn on bluetooth, press OK to close the application.");
+                exit_app(R.string.BT_enable_failed);
             }
             else if( RESULT_OK == resultCode)
             {
-                updateBTdevices();
+                bluetooth.updateDevices();
             }
         }
     }
@@ -171,32 +154,23 @@ public class MainActivity extends Activity implements SensorEventListener
             NeedToSend=false;
             deltaX=0;
         }
-        if (allowToSend && ((open && NeedToSend) || packet[2]!=0))
+        if (allowToSend && ((bluetooth.isConnected() && NeedToSend) || packet[2]!=0))
         {
-            try
-            {
-                packet[0]=(byte) deltaX;
-                packet[1]=(byte) deltaY;
-                mmOutputStream.write(packet);
-                myLabel.setText(R.string.data_sent);
-            }
-            catch (IOException ex)
-            {
-                myLabel.setText(R.string.send_err);
-                open=false;
-            }
+            packet[0]=(byte) deltaX;
+            packet[1]=(byte) deltaY;
+            bluetooth.send(packet);
         }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    public void exit_app(String str)
+    public void exit_app(int resId)
     {
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle("Error!")
-                .setMessage(str)
+                .setMessage(getString(resId)+", press OK to close the application.")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener()
                 {
                     @Override
@@ -208,35 +182,12 @@ public class MainActivity extends Activity implements SensorEventListener
                 .show();
     }
 
-    public void updateBTdevices()
-    {
-        pairedDevices = mBluetoothAdapter.getBondedDevices();
-        if( pairedDevices.size() > 0 )
-        {
-            List<String> list = new ArrayList<>();
-            for (BluetoothDevice device : pairedDevices)
-            {
-                list.add( device.getName() );
-            }
-            ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, list);
-            dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            devList.setAdapter(dataAdapter);
-        }
-        else
-        {
-            List<String> list = new ArrayList<>();
-            list.add("You don't have any paired devices");
-            ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,list);
-            devList.setAdapter(dataAdapter);
-        }
-    }
-
-    public void popup(String str)
+    public void popup(int resId)
     {
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle("Warning!")
-                .setMessage(str)
+                .setMessage(getString(resId))
                 .setPositiveButton("OK", new DialogInterface.OnClickListener()
                 {
                     @Override
@@ -250,70 +201,130 @@ public class MainActivity extends Activity implements SensorEventListener
 
     public void openBtnClicked(View view)
     {
-        if(connected || open)
-        {
-            try {
-                closeBT();
-            } catch (IOException ex) {
-                exit_app("Error while closing bluetooth connection, press OK to close the application.");
-            }
-        }
-        try
-        {
-            openBT();
-        }
-        catch (IOException ex)
-        {
-            popup("Error while setting connection, probably the device is not active. Try to turn it on, or select another device.");
-            connected = false;
-            open = false;
-        }
+        bluetooth.close();
+        bluetooth.open( devList.getSelectedItem().toString() );
+
     }
 
     public void closeBtnClicked(View view)
     {
-        if(connected || open)
-        {
-            try {
-                closeBT();
-            } catch (IOException ex) {
-                exit_app("Error while closing bluetooth connection, press OK to close the application.");
-            }
-        }
+        bluetooth.close();
     }
 
-    void openBT() throws IOException
+    private class BT
     {
-        UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
-        String devName = devList.getSelectedItem().toString();
-        for( BluetoothDevice dev : pairedDevices )
+        private BluetoothAdapter mBluetoothAdapter;
+        private BluetoothSocket mmSocket;
+        private BluetoothDevice mmDevice;
+        private OutputStream mmOutputStream;
+        private InputStream mmInputStream;
+        private Set<BluetoothDevice> pairedDevices;
+        private boolean connected;
+
+        private BT()
         {
-            if( devName.equals(dev.getName()) )
+            connected = false;
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (mBluetoothAdapter == null)
             {
-                mmDevice =  dev;
+                exit_app(R.string.BT_device_error);
+            }
+
+            if( !mBluetoothAdapter.isEnabled() )
+            {
+                Intent enableBtIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult( enableBtIntent, REQUEST_ENABLE_BT );
             }
         }
-        mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-        mmSocket.connect();
-        mmOutputStream = mmSocket.getOutputStream();
-        mmInputStream = mmSocket.getInputStream();
+        private boolean isConnected()
+        {
+            return connected;
+        }
+        private void open(String devName)
+        {
+            UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
+            for( BluetoothDevice dev : pairedDevices )
+            {
+                if( devName.equals(dev.getName()) )
+                {
+                    mmDevice =  dev;
+                }
+            }
+            try {
+                mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+                mmSocket.connect();
+                mmOutputStream = mmSocket.getOutputStream();
+                mmInputStream = mmSocket.getInputStream();
+            }catch(IOException e)
+            {
+                popup(R.string.BT_connection_error);
+                connected = false;
+            }
 
 
 
-        myLabel.setText(R.string.BT_opened);
-        open=true;
-        connected=true;
+            myLabel.setText(R.string.BT_opened);
+            connected=true;
+        }
+
+        private void close()
+        {
+            if(connected)
+            {
+                try {
+                    mmOutputStream.close();
+                    mmInputStream.close();
+                    mmSocket.close();
+                    myLabel.setText(R.string.BT_closed);
+                    connected=false;
+                } catch (IOException ex) {
+                    exit_app(R.string.BT_close_error);
+                }
+            }
+
+        }
+
+        private void send(byte[] packet)
+        {
+            try
+            {
+                mmOutputStream.write(packet);
+                myLabel.setText(R.string.data_sent);
+            }
+            catch (IOException ex)
+            {
+                popup(R.string.send_err);
+                connected=false;
+            }
+
+        }
+
+        private void updateDevices()
+        {
+            pairedDevices = mBluetoothAdapter.getBondedDevices();
+            if( pairedDevices.size() > 0 )
+            {
+                List<String> list = new ArrayList<>();
+                for (BluetoothDevice device : pairedDevices)
+                {
+                    list.add( device.getName() );
+                }
+                ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_item, list);
+                dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                devList.setAdapter(dataAdapter);
+            }
+            else
+            {
+                List<String> list = new ArrayList<>();
+                list.add("You don't have any paired devices");
+                ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(MainActivity.this,android.R.layout.simple_spinner_item,list);
+                devList.setAdapter(dataAdapter);
+            }
+        }
+
 
     }
 
-    void closeBT() throws IOException
-    {
-        mmOutputStream.close();
-        mmInputStream.close();
-        open=false;
-        mmSocket.close();
-        myLabel.setText(R.string.BT_closed);
-        connected=false;
-    }
+
 }
 
