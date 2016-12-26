@@ -24,26 +24,56 @@ namespace pc_app
             notConnectedIcon = pc_app.Properties.Resources.NotConnectedIcon;
             Icon = notConnectedIcon;
             connectedIcon = pc_app.Properties.Resources.ConnectedIcon;
-            checkingConnection = new Thread(new ThreadStart(CheckingConnectionFun));
-            notifyIcon.ContextMenu = GetMenuForIcon();    
+            notifyIcon.ContextMenu = GetMenuForIcon();
             notifyIcon.Visible = true;
             notifyIcon.Icon = Icon;
+            this.Resize += Form1_Resize;
+            this.notifyIcon.DoubleClick += NotifyIcon_DoubleClick;
+            this.ShowInTaskbar = false;
+            this.WindowState = FormWindowState.Minimized;
+            checkingConnection = new Thread(new ThreadStart(CheckingConnectionFun));
             checkingConnection.Start();
         }
-        private void CheckingConnectionFun() {
+
+        private void NotifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Normal;
+            this.Show();
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            if (FormWindowState.Minimized == this.WindowState)
+            {
+                this.Hide();
+            }
+        }
+
+        private void CheckingConnectionFun()
+        {
             Action act = () => notifyIcon.Icon = Icon = bt.GetConnectedStatus() ? connectedIcon : notConnectedIcon;
             while (true)
             {
-                Invoke(act);
+                try
+                {
+                    Invoke(act);
+                }
+                catch (System.InvalidOperationException e)
+                {
+                    System.Diagnostics.Debug.WriteLine(e.Message);
+                }
                 Thread.Sleep(1000);
             }
         }
         private ContextMenu GetMenuForIcon()
         {
             ContextMenu menu = new ContextMenu();
-            MenuItem exit = new MenuItem("Exit");
-            menu.MenuItems.Add(exit);
-            exit.Click += Exit_Click;
+            MenuItem title = new MenuItem("PicoMouse");
+            title.Enabled = false;
+            menu.MenuItems.Add(title);
+            menu.MenuItems.Add("-");
+            menu.MenuItems.Add("Sensitivity", NotifyIcon_DoubleClick);
+            menu.MenuItems.Add("Exit", Exit_Click);
             return menu;
         }
 
@@ -51,12 +81,5 @@ namespace pc_app
         {
             this.Close();
         }
-
-        
-
-       /* protected override void SetVisibleCore(bool value)
-        {
-            base.SetVisibleCore(false);
-        }*/
     }
 }
