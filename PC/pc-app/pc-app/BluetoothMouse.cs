@@ -25,6 +25,13 @@ namespace pc_app
             return isConnected;
         }
 
+        public void SetSensitivity(int sensitivity)
+        {
+            this.sensitivity = ((double)sensitivity)/100;
+        }
+
+        private double sensitivity=1;
+
         private bool isConnected = false;
 
         private Thread listenForConnection;
@@ -68,9 +75,11 @@ namespace pc_app
             }
 
             var actualPosition = Cursor.Position;
-            MouseControl.SetCursorPos(actualPosition.X + (sbyte)X, actualPosition.Y + (sbyte)Y);
+            X=actualPosition.X+(int)(sensitivity*(sbyte)X);
+            Y=actualPosition.Y+(int)(sensitivity*(sbyte)Y);
+            MouseControl.SetCursorPos(X, Y);
             MouseControl.LeftClickAction(Rest == 1);
-            System.Diagnostics.Debug.WriteLine("" + X + Y);
+       //     System.Diagnostics.Debug.WriteLine("" + X + Y);
             strm.BeginRead(new byte[3], 0, 3, new AsyncCallback(ReadingData), strm);
         }
 

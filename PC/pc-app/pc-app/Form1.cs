@@ -31,8 +31,14 @@ namespace pc_app
             this.notifyIcon.DoubleClick += NotifyIcon_DoubleClick;
             this.ShowInTaskbar = false;
             this.WindowState = FormWindowState.Minimized;
+            this.trackBar1.ValueChanged += TrackBar1_ValueChanged;
             checkingConnection = new Thread(new ThreadStart(CheckingConnectionFun));
             checkingConnection.Start();
+        }
+
+        private void TrackBar1_ValueChanged(object sender, EventArgs e)
+        {
+            bt.SetSensitivity(trackBar1.Value*25);
         }
 
         private void NotifyIcon_DoubleClick(object sender, EventArgs e)
