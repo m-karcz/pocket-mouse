@@ -1,11 +1,9 @@
 package com.example.michal.bluetooth;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -27,55 +25,45 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
+
 public class MainActivity extends Activity implements SensorEventListener
 {
     private TextView myLabel;
-    boolean NeedToSend=false,allowToSend=true;
-    private byte[] packet = {0,0,0};
     private Spinner devList;
-    private final int REQUEST_ENABLE_BT = 1;
     private BT bluetooth;
+    private Gyro gyro;
+    private Mouse mouse;
+    private Dialogue dialogue;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        SensorManager sensorManager;
-        Sensor gyroscope;
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //GUI elements initialization
         Button mLeftButton= (Button)findViewById(R.id.mouseL);
         Button mRightButton= (Button)findViewById(R.id.mouseR);
         Button lockMove= (Button)findViewById(R.id.lockMove);
         devList= (Spinner)findViewById(R.id.devList);
         myLabel = (TextView)findViewById(R.id.label);
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null)
-        {
-            // success! we have a gyroscope
-            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
-        } 
-        else 
-        {
-            // fail! we don't have a gyro!
-            exit_app( R.string.gyro_error );
-        }
 
+        dialogue = new Dialogue(this);
+        gyro = new Gyro();
         bluetooth = new BT();
         bluetooth.updateDevices();
+        mouse = new Mouse();
 
-
+        //action when left mouse button is touched
         mLeftButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if( bluetooth.isConnected() ){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        packet[2]=(byte) 1;
+                        mouse.leftChanged(true);
                         return true;
                     case MotionEvent.ACTION_UP:
-                        packet[2]=(byte) 0;
+                        mouse.leftChanged(false);
                         return true;
                 }}
                 return false;
@@ -87,10 +75,10 @@ public class MainActivity extends Activity implements SensorEventListener
             public boolean onTouch(View v, MotionEvent event) {
                 if( bluetooth.isConnected() ){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        packet[2]=(byte) 2;
+                        mouse.rightChanged(true);
                         return true;
                     case MotionEvent.ACTION_UP:
-                        packet[2]=(byte) 0;
+                        mouse.rightChanged(false);
                         return true;
                 }}
                 return false;
@@ -102,10 +90,10 @@ public class MainActivity extends Activity implements SensorEventListener
             public boolean onTouch(View v, MotionEvent event) {
                 if( bluetooth.isConnected() ){switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        allowToSend=false;
+                        mouse.lockChanged(true);
                         return true;
                     case MotionEvent.ACTION_UP:
-                        allowToSend=true;
+                        mouse.lockChanged(false);
                         return true;
                 }}
                 return false;
@@ -117,102 +105,136 @@ public class MainActivity extends Activity implements SensorEventListener
 
     @Override
     protected void onActivityResult( int requestCode, int resultCode, Intent data )
-    {//function to determine if BT was enabled by user
-        if(requestCode == REQUEST_ENABLE_BT)
-        {
-            if(RESULT_CANCELED == resultCode)
-            {
-                exit_app(R.string.BT_enable_failed);
-            }
-            else if( RESULT_OK == resultCode)
-            {
-                bluetooth.updateDevices();
-            }
-        }
+    {//function to determine if BT was enabled by user (wasn't active on startup)
+        bluetooth.checkUserPermission(requestCode, resultCode);
     }
 
     @Override
     public void onSensorChanged(SensorEvent event)
-    {
-        float deltaX,deltaY;
-        // get the change of the x,y,z values of the gyroscope
-        if (Math.abs(event.values[0])>0.05) {
-            deltaY = -35*event.values[0];
-            NeedToSend=true;
-        }
-        else
-        {
-            deltaY=0;
-            NeedToSend=false;
-        }
-        if (Math.abs(event.values[2])>0.05) {
-            deltaX = -35*event.values[2];
-            NeedToSend=true;
-        }
-        else
-        {
-            NeedToSend=false;
-            deltaX=0;
-        }
-        if (allowToSend && ((bluetooth.isConnected() && NeedToSend) || packet[2]!=0))
-        {
-            packet[0]=(byte) deltaX;
-            packet[1]=(byte) deltaY;
-            bluetooth.send(packet);
-        }
+    {//action to do when position was changed
+        gyro.changeHandle(event);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    public void exit_app(int resId)
-    {
-        new AlertDialog.Builder(this)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Error!")
-                .setMessage(getString(resId)+", press OK to close the application.")
-                .setPositiveButton("OK", new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-
-                })
-                .show();
-    }
-
-    public void popup(int resId)
-    {
-        new AlertDialog.Builder(this)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Warning!")
-                .setMessage(getString(resId))
-                .setPositiveButton("OK", new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-
-                })
-                .show();
-    }
-
     public void openBtnClicked(View view)
-    {
+    {//called when connect btn is pressed
         bluetooth.close();
         bluetooth.open( devList.getSelectedItem().toString() );
 
     }
 
     public void closeBtnClicked(View view)
-    {
+    { //called when disconnect btn is pressed
         bluetooth.close();
+    }
+
+
+    private class Mouse
+    {
+        private byte[] packet;
+        private boolean moveLocked;
+
+        private Mouse()
+        {
+            packet = new byte[]{0,0,0};
+            moveLocked = false;
+        }
+        private void positionChanged(float deltaX, float deltaY)
+        {
+           if ( !moveLocked && (bluetooth.isConnected()  || mouse.isBtnPressed()) )
+           {
+               packet[0] = (byte) deltaX;
+               packet[1] = (byte) deltaY;
+               bluetooth.send(packet);
+           }
+        }
+        private void leftChanged(boolean state)
+        {
+            if( state )
+            {
+                packet[2] = (byte) 1;
+            }
+            else
+            {
+                packet[2] = (byte) 0;
+            }
+        }
+        private void rightChanged(boolean state)
+        {
+            if( state )
+            {
+                packet[2] = (byte) 2;
+            }
+            else
+            {
+                packet[2] = (byte) 0;
+            }
+        }
+        private void lockChanged(boolean state )
+        {
+            moveLocked = state;
+        }
+        private boolean isBtnPressed()
+        {
+            return (0 < packet[2]);
+        }
+    }
+
+    private class Gyro
+    {
+        SensorManager sensorManager;
+        Sensor gyroscope;
+
+        private Gyro()
+        {
+            sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null)
+            {
+                // success! we have a gyroscope
+                gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                sensorManager.registerListener(MainActivity.this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
+            }
+            else
+            {
+                // fail! we don't have a gyro!
+                dialogue.exit_app( R.string.gyro_error );
+            }
+        }
+
+        private void changeHandle(SensorEvent event)
+        {
+            float deltaX,deltaY;
+            boolean changed = false;
+            // get the change of the x,y values of the gyroscope
+            if (Math.abs(event.values[0])>0.05) {
+                deltaY = -35*event.values[0];
+                changed = true;
+            }
+            else
+            {
+                deltaY=0;
+            }
+            if (Math.abs(event.values[2])>0.05) {
+                deltaX = -35*event.values[2];
+                changed = true;
+            }
+            else
+            {
+                deltaX=0;
+            }
+            if ( changed )
+            {
+                mouse.positionChanged(deltaX, deltaY);
+            }
+        }
+
     }
 
     private class BT
     {
+        private final int REQUEST_ENABLE_BT = 1;
         private BluetoothAdapter mBluetoothAdapter;
         private BluetoothSocket mmSocket;
         private BluetoothDevice mmDevice;
@@ -227,7 +249,7 @@ public class MainActivity extends Activity implements SensorEventListener
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (mBluetoothAdapter == null)
             {
-                exit_app(R.string.BT_device_error);
+                dialogue.exit_app(R.string.BT_device_error);
             }
 
             if( !mBluetoothAdapter.isEnabled() )
@@ -239,6 +261,21 @@ public class MainActivity extends Activity implements SensorEventListener
         private boolean isConnected()
         {
             return connected;
+        }
+
+        private void checkUserPermission(int requestCode, int resultCode)
+        {
+            if(requestCode == REQUEST_ENABLE_BT)
+            {
+                if(RESULT_CANCELED == resultCode)
+                {
+                    dialogue.exit_app(R.string.BT_enable_failed);
+                }
+                else if( RESULT_OK == resultCode)
+                {
+                    bluetooth.updateDevices();
+                }
+            }
         }
         private void open(String devName)
         {
@@ -255,16 +292,13 @@ public class MainActivity extends Activity implements SensorEventListener
                 mmSocket.connect();
                 mmOutputStream = mmSocket.getOutputStream();
                 mmInputStream = mmSocket.getInputStream();
+                myLabel.setText(R.string.BT_opened);
+                connected=true;
             }catch(IOException e)
             {
-                popup(R.string.BT_connection_error);
+                dialogue.popup(R.string.BT_connection_error);
                 connected = false;
             }
-
-
-
-            myLabel.setText(R.string.BT_opened);
-            connected=true;
         }
 
         private void close()
@@ -278,7 +312,7 @@ public class MainActivity extends Activity implements SensorEventListener
                     myLabel.setText(R.string.BT_closed);
                     connected=false;
                 } catch (IOException ex) {
-                    exit_app(R.string.BT_close_error);
+                    dialogue.exit_app(R.string.BT_close_error);
                 }
             }
 
@@ -293,7 +327,7 @@ public class MainActivity extends Activity implements SensorEventListener
             }
             catch (IOException ex)
             {
-                popup(R.string.send_err);
+                dialogue.popup(R.string.send_err);
                 connected=false;
             }
 
