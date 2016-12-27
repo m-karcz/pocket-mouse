@@ -1,9 +1,9 @@
 package com.example.michal.bluetooth;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -26,7 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 
-public class MainActivity extends Activity implements SensorEventListener
+public class MainActivity extends AppCompatActivity implements SensorEventListener
 {
     private TextView myLabel;
     private Spinner devList;
@@ -45,8 +45,11 @@ public class MainActivity extends Activity implements SensorEventListener
         Button mLeftButton= (Button)findViewById(R.id.mouseL);
         Button mRightButton= (Button)findViewById(R.id.mouseR);
         Button lockMove= (Button)findViewById(R.id.lockMove);
+        Button openBtn = (Button) findViewById(R.id.open);
         devList= (Spinner)findViewById(R.id.devList);
         myLabel = (TextView)findViewById(R.id.label);
+
+        appBar(R.string.disconnected);
 
         dialogue = new Dialogue(this);
         gyro = new Gyro();
@@ -99,6 +102,30 @@ public class MainActivity extends Activity implements SensorEventListener
                 return false;
             }
         });
+
+        openBtn.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent event){
+                switch( event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        appBar(R.string.connecting);
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        bluetooth.close();
+                        bluetooth.open( devList.getSelectedItem().toString() );
+                        if(bluetooth.isConnected())
+                        {
+                            appBar(R.string.connected);
+                        }
+                        else
+                        {
+                            appBar(R.string.disconnected);
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
     }
 
 
@@ -118,18 +145,36 @@ public class MainActivity extends Activity implements SensorEventListener
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    public void openBtnClicked(View view)
+    /*public void openBtnClicked(View view)
     {//called when connect btn is pressed
         bluetooth.close();
+        appBar(R.string.connecting);
         bluetooth.open( devList.getSelectedItem().toString() );
+        if(bluetooth.isConnected())
+        {
+            appBar(R.string.connected);
+        }
+        else
+        {
+            appBar(R.string.disconnected);
+        }
 
-    }
+    }*/
 
     public void closeBtnClicked(View view)
     { //called when disconnect btn is pressed
         bluetooth.close();
     }
 
+    private void appBar(int resId)
+    {
+        try{
+            getSupportActionBar().setTitle(resId );
+        }catch(java.lang.NullPointerException e )
+        {
+            dialogue.exit_app(R.string.error);
+        }
+    }
 
     private class Mouse
     {
@@ -296,7 +341,7 @@ public class MainActivity extends Activity implements SensorEventListener
                 connected=true;
             }catch(IOException e)
             {
-                dialogue.popup(R.string.BT_connection_error);
+                dialogue.toast(R.string.BT_connection_error);
                 connected = false;
             }
         }
@@ -311,6 +356,7 @@ public class MainActivity extends Activity implements SensorEventListener
                     mmSocket.close();
                     myLabel.setText(R.string.BT_closed);
                     connected=false;
+                    appBar(R.string.disconnected);
                 } catch (IOException ex) {
                     dialogue.exit_app(R.string.BT_close_error);
                 }

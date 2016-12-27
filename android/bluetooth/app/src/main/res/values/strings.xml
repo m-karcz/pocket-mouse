@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Pocket Mouse</string>
+    <string name="error">Error</string>
     <string name="gyro_error">Your device has no gyroscope</string>
     <string name="data_sent">Data sent</string>
     <string name="send_err">Sending error</string>
@@ -8,5 +9,8 @@
     <string name="BT_enable_failed">Bluetooth was not enabled</string>
     <string name="BT_close_error">Error while closing bluetooth connection</string>
     <string name="BT_device_error">You have no bluetooth device</string>
-    <string name="BT_connection_error">Error while setting connection, probably the device is not active. Try to turn it on, or select another device.</string>
+    <string name="BT_connection_error">Unable to connect the device</string>
+    <string name="disconnected">Pocket Mouse (not connected)</string>
+    <string name="connecting">Pocket Mouse (connecting...)</string>
+    <string name="connected">Pocket Mouse (connected)</string>
 </resources>

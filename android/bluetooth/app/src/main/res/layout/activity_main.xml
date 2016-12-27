@@ -17,47 +17,6 @@
         android:layout_height="wrap_content"
         android:text="Pick the device:" />
 
-    <!--
-       <Button
-           android:id="@+id/send"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:layout_alignTop="@id/open"
-           android:layout_toLeftOf="@id/open"
-           android:text="Send" />
-
-
-           <TextView
-               android:id="@+id/yText"
-               android:text="0"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:layout_alignTop="@+id/xText"
-               android:layout_toEndOf="@+id/xText"
-               android:layout_marginStart="43dp"
-               />
-
-           <TextView
-               android:text="TextView"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:layout_marginStart="45dp"
-               android:id="@+id/zText"
-               android:layout_alignBaseline="@+id/yText"
-               android:layout_alignBottom="@+id/yText"
-               android:layout_toEndOf="@+id/yText" />
-
-           <TextView
-               android:text="TextView"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:id="@+id/xText"
-               android:layout_marginBottom="39dp"
-               android:layout_alignParentBottom="true"
-               android:layout_alignParentStart="true"
-               android:layout_marginStart="43dp"/>
-       -->
-
     <Button
         android:text="Mouse\nRight"
         android:layout_width="160dp"
@@ -89,8 +48,7 @@
         android:text="Connect"
         android:layout_below="@+id/devList"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="12dp"
-        android:onClick="openBtnClicked" />
+        android:layout_marginTop="12dp" />
 
     <Button
         android:id="@+id/close"

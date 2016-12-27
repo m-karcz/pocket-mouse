@@ -1,8 +1,10 @@
 package com.example.michal.bluetooth;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
+import android.widget.Toast;
 
 
 class Dialogue {
@@ -45,5 +47,15 @@ class Dialogue {
 
                 })
                 .show();
+    }
+
+    void toast(int resId)
+    {
+        Context context = activity.getApplicationContext();
+        CharSequence text = activity.getText( resId );
+        int duration = Toast.LENGTH_SHORT;
+
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
     }
 }
