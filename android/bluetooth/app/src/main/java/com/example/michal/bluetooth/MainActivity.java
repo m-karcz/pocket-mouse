@@ -1,7 +1,9 @@
 package com.example.michal.bluetooth;
 
+import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
@@ -34,6 +36,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Gyro gyro;
     private Mouse mouse;
     private Dialogue dialogue;
+    private final BroadcastReceiver btStateBroadcastReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            final String action = intent.getAction();
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED))
+            {
+                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                if(BluetoothAdapter.STATE_OFF == state)
+                {
+                    bluetooth.close();
+                }
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -49,8 +68,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         devList= (Spinner)findViewById(R.id.devList);
         myLabel = (TextView)findViewById(R.id.label);
 
-        appBar(R.string.disconnected);
+        //for bluetooth broadcast receiver
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(btStateBroadcastReceiver, filter);
 
+        appBar(R.string.disconnected);
         dialogue = new Dialogue(this);
         gyro = new Gyro();
         bluetooth = new BT();
@@ -144,22 +166,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-
-    /*public void openBtnClicked(View view)
-    {//called when connect btn is pressed
-        bluetooth.close();
-        appBar(R.string.connecting);
-        bluetooth.open( devList.getSelectedItem().toString() );
-        if(bluetooth.isConnected())
-        {
-            appBar(R.string.connected);
-        }
-        else
-        {
-            appBar(R.string.disconnected);
-        }
-
-    }*/
 
     public void closeBtnClicked(View view)
     { //called when disconnect btn is pressed
@@ -373,8 +379,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
             catch (IOException ex)
             {
-                dialogue.popup(R.string.send_err);
-                connected=false;
+                //dialogue.popup(R.string.send_err);
+                bluetooth.close();
             }
 
         }
@@ -403,6 +409,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
 
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        unregisterReceiver(btStateBroadcastReceiver);
     }
 
 
