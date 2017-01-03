@@ -20,9 +20,9 @@ namespace pc_app
             StartListeningForConnection();
         }
 
-        public bool GetConnectedStatus()
+        public BTStatus GetStatus()
         {
-            return isConnected;
+            return btStatus;
         }
 
         public void SetSensitivity(int sensitivity)
@@ -32,11 +32,11 @@ namespace pc_app
 
         private double sensitivity=1;
 
-        private bool isConnected = false;
+        private BTStatus btStatus = BTStatus.Off;
 
         private Thread listenForConnection;
 
-        private BluetoothListener listener = new BluetoothListener(new Guid("00001101-0000-1000-8000-00805f9b34fb"));
+        private BluetoothListener listener;
         private BluetoothClient client;
 
         private void StartListeningForConnection()
@@ -60,7 +60,7 @@ namespace pc_app
                         X = strm.ReadByte();
                         if (-1 == X)
                         {
-                            isConnected = false;
+                            btStatus = BTStatus.NotConnected;
                             MRE.Set();
                             return;
                         }
@@ -84,9 +84,16 @@ namespace pc_app
         }
 
         ManualResetEvent MRE = new ManualResetEvent(false);
+        
 
         private void WaitingForConnection()
         {
+            
+            while (!BluetoothRadio.IsSupported)
+            {
+                Thread.Sleep(2000);
+            }
+            listener = new BluetoothListener(new Guid("00001101-0000-1000-8000-00805f9b34fb"));
             listener.Start();
             while (true)
             {
@@ -96,7 +103,7 @@ namespace pc_app
                     var stream = client.GetStream();
 
                     stream.BeginRead(new byte[3], 0, 3, new AsyncCallback(ReadingData), stream);
-                    isConnected = true;
+                    btStatus = BTStatus.Connected;
                     MRE.WaitOne();
                 }
                 else
@@ -105,6 +112,7 @@ namespace pc_app
                 }
             }
         }
+
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

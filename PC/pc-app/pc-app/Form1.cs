@@ -57,7 +57,7 @@ namespace pc_app
 
         private void CheckingConnectionFun()
         {
-            Action act = () => notifyIcon.Icon = Icon = bt.GetConnectedStatus() ? connectedIcon : notConnectedIcon;
+            Action act = () => notifyIcon.Icon = Icon = bt.GetStatus() == BTStatus.Connected ? connectedIcon : notConnectedIcon;
             while (true)
             {
                 try
